@@ -40,15 +40,20 @@ for syn in bass_syns_book:
         )
     )
 
-print(bass_syns_book)
-print(bass_syns_book[0].lemma_names())
-print(bass_syns_book[1].lemma_names())
-
 def extract_hypernyms (synset):
-    return [word.lemma_names() for word in synset.hypernyms()][0]
+    return [word.lemma_names() for word in synset.hypernyms() if synset].pop()
 
+#FIXME: the hypernym chain did not converge.
 def request_hypernyms (syn_list):
+    reviewed = []
     for syn in syn_list:
-        print(extract_hypernyms(syn))
+        print()
+        hyper = extract_hypernyms(syn)
+        print(hyper)
+        while len(hyper)>0 and hyper[0] not in reviewed:
+            reviewed.append(hyper[0])
+            hyper=extract_hypernyms(wn.synsets(hyper[0])[0])
+            print(hyper)
+
 
 request_hypernyms(bass_syns_book)
