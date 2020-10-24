@@ -1,59 +1,80 @@
 from nltk.corpus import wordnet as wn
-from itertools import chain
+from pprint import pprint
 from pdb import set_trace
 
 """
         PART A; WordNet synsets and lemmas
 """
-# 3 print number of synsets of a word, and number of NOUNS
-word_synsets = wn.synsets("study")
-word_synsets_noun = wn.synsets("study", pos=wn.NOUN)
 
-print(
-    'The Number of synsets for "study" is {} from which {} are nouns'.format(
-        len(word_synsets), len(word_synsets_noun)
-    )
-)
-# alt: print(sum(['.n.' in study_synset.name() for study_synset in study_synsets]))
 
-# 4, #5 for every noun synset of study print the synset's name, definition, examles an lema names.
-for syn in word_synsets_noun:
-    print(
-        "\nName: {} \nDef: {} \nExamples: {} \nLemmas: {}".format(
-            syn.name(), syn.definition(), syn.examples(), syn.lemma_names()
+def get_synsets(word):
+    return wn.synsets(word)
+
+
+def get_synsets_noun(word):
+    return wn.synsets(word, pos=wn.NOUN)
+
+
+def synset_description(synset_list):
+    for syn in synset_list:
+        print(
+            "\nname: {} \ndef.: {} \ne.g.: {} \nlemmas: {}".format(
+                syn.name(), syn.definition(), syn.examples(), syn.lemma_names()
+            )
         )
-    )
-# print([syn.lemma_names() for syn in study_synsets])
+
+
+def part_a(word):
+    print('Number of synsets of "{}" are {}'.format(word, len(get_synsets(word))))
+    print('Number of nouns on "{}" are {}'.format(word, len(get_synsets_noun(word))))
+    print('"{}"\'s synsets description'.format(synset_description(get_synsets(word))))
+
 
 """
         PART B; WordNet taxonomic relations
 """
 
-# 12 Hyponymy chain
-bass_syns = wn.synsets("bass")
-bass_syns_book = [syn for syn in bass_syns if ".03" in syn.name() or ".07" in syn.name()]
+# 12 Hypernym chain
+def filter_index(synset_list, index_list):
+    return [syn for syn in synset_list for index in index_list if index in syn.name()]
 
-for syn in bass_syns_book:
+
+def get_hypernyms_tree(synset_list):
+    for syn in synset_list:
+        print("\nHypernym chain for {} ({})".format(syn, syn.lemma_names()))
+        hyp = lambda s: s.hypernyms()
+        pprint(syn.tree(hyp))
+
+
+def get_taxonomic_distance(synset_1, synset_2):
+    print()
     print(
-        "\nName: {} \nDef: {} \nExamples: {} \nLemmas: {}".format(
-            syn.name(), syn.definition(), syn.examples(), syn.lemma_names()
+        "path_similarity between {} and {} is: {}".format(
+            synset_1, synset_2, synset_1.path_similarity(synset_2)
+        )
+    )
+    print(
+        "lch_similarity between {} and {} is: {}".format(
+            synset_1, synset_2, synset_1.lch_similarity(synset_2)
+        )
+    )
+    print(
+        "wup_similarity between {} and {} is: {}".format(
+            synset_1, synset_2, synset_1.wup_similarity(synset_2)
         )
     )
 
-def extract_hypernyms (synset):
-    return [word.lemma_names() for word in synset.hypernyms() if synset].pop()
 
-#FIXME: the hypernym chain did not converge.
-def request_hypernyms (syn_list):
-    reviewed = []
-    for syn in syn_list:
-        print()
-        hyper = extract_hypernyms(syn)
-        print(hyper)
-        while len(hyper)>0 and hyper[0] not in reviewed:
-            reviewed.append(hyper[0])
-            hyper=extract_hypernyms(wn.synsets(hyper[0])[0])
-            print(hyper)
+def part_b(word):
+    print("\nThis synsets were filtered to match the figure 19.5 of Jurafsky")
+    synset_list = filter_index(synset_list=get_synsets(word), index_list=[".03", ".07"])
+    get_hypernyms_tree(synset_list=synset_list)
+    get_taxonomic_distance(synset_1=synset_list[0],synset_2=synset_list[1])
 
 
-request_hypernyms(bass_syns_book)
+if __name__ == "__main__":
+    # part_a(word="study")
+    part_b(word="bass")
+
+
+# TODO: part_b() print .lemma_names() not synset
