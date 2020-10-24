@@ -89,9 +89,9 @@ model = LogisticRegression()
 # print("\n Initial model Coefficients", model.coef_.squeeze())
 
 
-# if __name__ == "__main__":
-# part_a(word="study")
-# part_b(word="bass")
+if __name__ == "__main__":
+    part_a(word="study")
+    part_b(word="bass")
 
 
 # TODO: part_b() print .lemma_names() not synset
