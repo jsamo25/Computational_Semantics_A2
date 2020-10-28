@@ -1,4 +1,4 @@
-sentence_id,target_index,target_word,synset,synset_is_correct,context_before,context_after
+sentence_id,target_index,target_word,synset,context_before,context_after,synset_is_correct
 brown1/tagfiles/br-a01.xml_0,2,said,state.v.01,The Fulton County Grand Jury,Friday an investigation of Atlanta 's recent primary election produced `` no evidence '' that any irregularities took place .,True
 brown1/tagfiles/br-a01.xml_0,2,said,say.v.11,The Fulton County Grand Jury,Friday an investigation of Atlanta 's recent primary election produced `` no evidence '' that any irregularities took place .,False
 brown1/tagfiles/br-a01.xml_0,2,said,order.v.01,The Fulton County Grand Jury,Friday an investigation of Atlanta 's recent primary election produced `` no evidence '' that any irregularities took place .,False
