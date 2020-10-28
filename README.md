@@ -1,2 +1,3 @@
 #Computational Semantics
-##Assignment 2 -- Non-graded part.
+##Assignment 2 
+(non-graded part)
