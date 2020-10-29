@@ -105,10 +105,7 @@ def word_text_disambiguation_leks(line):
 def part_c():
     word_text_disambiguation_leks(line=3)
 
-
-
-
 if __name__ == "__main__":
-    #part_a(word="study")
-    #part_b(word="bass")
+    part_a(word="study")
+    part_b(word="bass")
     part_c()
