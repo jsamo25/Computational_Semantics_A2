@@ -48,7 +48,9 @@ def compare(target, prediction):
     correct = target == prediction
     return correct.mean()
 
-#print(compare(data["baseline_random"],data["synset"]))
-#print(compare(data["baseline_first"],data["synset"]))
+print(compare(target = data["synset"],prediction = data["baseline_random"]))
+print(compare(target = data["synset"],prediction = data["baseline_first"]))
 
 #print(data[["target_word","synset","baseline_random","baseline_first","synset_is_correct"]][:5])
+# true_predicted = data.groupby(["target_word", "synset","baseline_random","baseline_first"])["synset_is_correct"].count()
+# print(true_predicted)
