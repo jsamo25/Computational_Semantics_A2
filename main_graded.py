@@ -5,6 +5,10 @@ import random
 
 from nltk.corpus import wordnet as wn
 from itertools import chain
+from sklearn.metrics import confusion_matrix
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+
 from pdb import set_trace
 
 #nltk.download('averaged_perceptron_tagger')
@@ -14,7 +18,7 @@ from pdb import set_trace
 """
 
 data = pd.read_csv("semcor30.csv")
-pd.set_option("display.max_columns", 10)
+pd.set_option("display.max_columns", 15)
 
 #2 SemCor dataset statistics
 def get_full_sentence(target_word, context_before, context_after):
@@ -174,4 +178,54 @@ data["less_common_def_similarity"] = data["target_word"].apply(compare_less_comm
 # print("Word compared to it's most common def.",data["most_common_def_similarity"].mean())
 # print("Word compared to it's less common def.",data["less_common_def_similarity"].mean())
 
+"""
+        PART I; Word sense disambiguation
+"""
+
+def synset_and_target_definition(word, pred_synset):
+    predicted_synset_def = pred_synset.definition()
+    target_synsets = get_synsets(word)
+    target_def = target_synsets[0].definition()
+    return sentence_cosine_similarity(predicted_synset_def,target_def)
+
+def sentence_and_target_definition(word,sentence):
+    synsets = get_synsets(word)
+    most_common_def = synsets[0].definition()
+    return sentence_cosine_similarity(most_common_def,sentence)
+
+
+data["f1_target_and_synset_definition_similarity"] = data[["target_word","synset"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
+data["f2_target_and_definition_similarity"] = data["target_word"].apply(compare_most_common_definition)
+data["f3_target_and_sentence_similarity"] = data[["target_word","full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
+data["f4_sentence_and_definition_similarity"] = data[["target_word","full_sentence"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
+
+#TODO: idea, use word2vec for target word, then for predicted_synset_lemma? for the whole sentence
+data_train, data_test = train_test_split(data, test_size=0.3)
+y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
+x_train, x_test = (
+    data_train[
+        ["f1_target_and_synset_definition_similarity",
+         "f2_target_and_definition_similarity",
+         "f3_target_and_sentence_similarity",
+         "f4_sentence_and_definition_similarity"]
+    ],
+    data_test[
+        ["f1_target_and_synset_definition_similarity",
+         "f2_target_and_definition_similarity",
+         "f3_target_and_sentence_similarity",
+         "f4_sentence_and_definition_similarity"]
+    ],
+)
+def accuracy(model, x_train, y_train, x_test, y_test):
+    print("training set:", model.score(x_train, y_train))
+    print("testing set:", model.score(x_test, y_test))
+
+
+# Logistic regression basic.
+print("\n Initial model score")
+model = LogisticRegression().fit(x_train, y_train)
+print("\n Initial model Coefficients", model.coef_.squeeze())
+
+print("model accuracy:")
+accuracy(model, x_train, y_train, x_test, y_test)
 
