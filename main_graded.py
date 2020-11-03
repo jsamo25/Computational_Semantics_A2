@@ -121,17 +121,17 @@ def get_word2vec(word):
 def synonym_similarity(word):
     synonyms=get_synonyms(word)
     syn_similarity = [cosine(get_word2vec(syn),get_word2vec(word)) for syn in synonyms]
-    return sum(syn_similarity)/len(syn_similarity)
+    return np.average(syn_similarity)
 
 def hypernym_similarity(word):
     hypernyms=get_hypernyms(word)
     hyp_similarity = [cosine(get_word2vec(hyp),get_word2vec(word)) for hyp in hypernyms]
-    return sum(hyp_similarity)/len(hyp_similarity)
+    return np.average(hyp_similarity)
 
 def hyponym_similarity(word):
     hyponyms=get_hyponyms(word)
     hyp_similarity = [cosine(get_word2vec(hyp),get_word2vec(word)) for hyp in hyponyms]
-    return sum(hyp_similarity)/len(hyp_similarity)
+    return np.average(hyp_similarity)
 
 data["synonym_similarity"] = data["target_word"].apply(synonym_similarity)
 data["hypernym_similarity"] = data["target_word"].apply(hypernym_similarity)
@@ -139,7 +139,39 @@ data["hyponym_similarity"] = data["target_word"].apply(hyponym_similarity)
 
 #(b) on average a word is more similar to it's hypernyms than to its hyponyms.
 
-print("synonym_similarity:",data["synonym_similarity"].mean())
-print("hypernym_similarity:",data["hypernym_similarity"].mean())
-print("hyponym_similarity:",data["hyponym_similarity"].mean())
+# print("synonym_similarity:",data["synonym_similarity"].mean())
+# print("hypernym_similarity:",data["hypernym_similarity"].mean())
+# print("hyponym_similarity:",data["hyponym_similarity"].mean())
+
+#5 It is possible to use word embeddings for constructing a reasonable meaning
+# representation also for a longer sequence of words, such as a sentence. Implement
+# a function that does this, and use it to test the following hypothesis using
+# word2vec embeddings: on average, a word is more similar to the definition of its
+# most frequent sense (i.e., first synset), than to definitions of its less frequent
+# senses.
+def sentence2vec(sentence):
+    sentence = sentence.lower().split()
+    sentence_embeddings = np.array([get_word2vec(word) for word in sentence])
+    return np.average(sentence_embeddings, axis=0)
+#print(sentence2vec("i like rain"))
+
+def sentence_cosine_similarity(sentence1,sentence2):
+    return cosine(sentence2vec(sentence1),sentence2vec(sentence2))
+
+def compare_most_common_definition(word):
+    synsets=get_synsets(word)
+    most_common_def = synsets[0].definition()
+    return sentence_cosine_similarity(word,most_common_def)
+
+def compare_less_common_definition(word):
+    synsets =get_synsets(word)
+    less_common_def = synsets[-1].definition()
+    return sentence_cosine_similarity(word,less_common_def)
+
+data["most_common_def_similarity"] = data["target_word"].apply(compare_most_common_definition)
+data["less_common_def_similarity"] = data["target_word"].apply(compare_less_common_definition)
+
+# print("Word compared to it's most common def.",data["most_common_def_similarity"].mean())
+# print("Word compared to it's less common def.",data["less_common_def_similarity"].mean())
+
 
