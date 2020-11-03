@@ -4,6 +4,7 @@ import nltk
 import random
 
 from nltk.corpus import wordnet as wn
+from nltk.wsd import lesk
 from itertools import chain
 from sklearn.metrics import confusion_matrix
 from sklearn.linear_model import LogisticRegression
@@ -201,38 +202,79 @@ def synset_example_and_sentence(pred_synset,sentence):
     except:
         return sentence_cosine_similarity("bias",sentence)
 
+def target_word_and_synset_definition(word, pred_synset):
+    synset = wn.synset(pred_synset)
+    return sentence_cosine_similarity(synset.definition(),word)
+
+def lesk_algorithm(word,context):
+    return lesk(context.split(),word)#.name()
+
+def target_word_and_lesk_similarity(word, context):
+    lesk = lesk_algorithm(word,context).lemma_names()[0]
+    return sentence_cosine_similarity(lesk,word)
 
 data["f1_synset_and_target_similarity"] = data[["synset","target_word"]].apply(lambda x: synset_and_target_lemmas(*x), axis=1)
 data["f2_synset_and_sentence_similarity"] = data[["synset","full_sentence"]].apply(lambda x: sentence_and_target_definition(*x),axis=1)
 data["f3_synset_definition_and_sentence_similarity"] = data[["synset","full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x),axis=1)
 data["f4_synset_example_and_sentence_similarity"] = data[["synset","full_sentence"]].apply(lambda x: synset_example_and_sentence(*x),axis=1)
+data["f5_target_word_and_sentence_similarity"] = data[["target_word","full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x),axis=1)
+data["f6_target_and_synset_definition"] = data[["target_word","synset"]].apply(lambda x: target_word_and_synset_definition(*x),axis=1)
+data["f0_lesk_pred_and_target_similarity"] = data[["target_word","full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
 
-data_train, data_test = train_test_split(data, test_size=0.3)
+data_train, data_test = train_test_split(data, test_size=0.2, random_state=1)
 y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
 x_train, x_test = (
     data_train[
         ["f1_synset_and_target_similarity",
-         "f2_synset_and_sentence_similarity",
+         "f2_synset_and_sentence_similarity", #TODO: maybe split this to context_before/context_after
          "f3_synset_definition_and_sentence_similarity",
-         "f4_synset_example_and_sentence_similarity"]
+         "f4_synset_example_and_sentence_similarity",
+         "f5_target_word_and_sentence_similarity",
+         "f6_target_and_synset_definition",
+         #"f0_lesk_pred_and_target_similarity"
+         ]
     ],
     data_test[
         ["f1_synset_and_target_similarity",
          "f2_synset_and_sentence_similarity",
          "f3_synset_definition_and_sentence_similarity",
-         "f4_synset_example_and_sentence_similarity"]
+         "f4_synset_example_and_sentence_similarity",
+         "f5_target_word_and_sentence_similarity",
+         "f6_target_and_synset_definition",
+         #"f0_lesk_pred_and_target_similarity"
+         ]
     ],
 )
 def accuracy(model, x_train, y_train, x_test, y_test):
     print("training set:", model.score(x_train, y_train))
     print("testing set:", model.score(x_test, y_test))
 
+def compare(target, prediction):
+    correct = target == prediction
+    return correct.mean()
 
 # Logistic regression basic.
 print("\n Initial model score")
-model = LogisticRegression().fit(x_train, y_train)
+model = LogisticRegression(C=10).fit(x_train, y_train)
 print("\n Initial model Coefficients", model.coef_.squeeze())
 
 print("model accuracy:")
 accuracy(model, x_train, y_train, x_test, y_test)
 
+data["baseline_ran"] = np.random.choice([True, False], size=len(data), p=[0.5, 1 - 0.5])
+data["baseline_pos"] = True
+data["baseline_neg"] = False
+
+print("\n Compare to baselines:")
+print(
+    "accuracy of all-positive baseline",
+    compare(data["synset_is_correct"], data["baseline_pos"]),
+)
+print(
+    "accuracy of all-negative baseline",
+    compare(data["synset_is_correct"], data["baseline_neg"]),
+)
+print(
+    "accuracy of all-random baseline",
+    compare(data["synset_is_correct"], data["baseline_ran"])
+)
