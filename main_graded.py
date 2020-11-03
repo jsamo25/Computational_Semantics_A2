@@ -1,11 +1,11 @@
-import pandas as pd
-import numpy as np
 import nltk
 import random
+import numpy as np
+import pandas as pd
 
-from nltk.corpus import wordnet as wn
 from nltk.wsd import lesk
 from itertools import chain
+from nltk.corpus import wordnet as wn
 from sklearn.metrics import confusion_matrix
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -221,49 +221,32 @@ def target_word_and_lesk_similarity(word, context):
     return sentence_cosine_similarity(lesk, word)
 
 
-data["f1_synset_and_target_similarity"] = data[["synset", "target_word"]].apply(lambda x: synset_and_target_lemmas(*x), axis=1)
-data["f2_synset_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
-data["f3_synset_and_context_before"] = data[["synset", "context_before"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
-data["f4_synset_and_context_after"] = data[["synset", "context_after"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
-data["f5_synset_definition_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x), axis=1)
-data["f6_synset_example_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_example_and_sentence(*x), axis=1)
-data["f7_target_word_and_sentence_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
-data["f8_target_and_synset_definition"] = data[["target_word", "synset"]].apply(lambda x: target_word_and_synset_definition(*x), axis=1)
+data["f1_synset_and_context_after"] = data[["synset", "context_after"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
+data["f2_synset_and_context_before"] = data[["synset", "context_before"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
+data["f3_synset_and_target_similarity"] = data[["synset", "target_word"]].apply(lambda x: synset_and_target_lemmas(*x), axis=1)
+data["f4_target_and_synset_definition"] = data[["target_word", "synset"]].apply(lambda x: target_word_and_synset_definition(*x), axis=1)
+data["f5_synset_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
+data["f6_target_word_and_sentence_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
+data["f7_synset_example_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_example_and_sentence(*x), axis=1)
+data["f8_synset_definition_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x), axis=1)
 data["f0_lesk_pred_and_target_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
 
 # TODO use synset lemma and find how many times it appears on the full sentence
 
 data_train, data_test = train_test_split(data, test_size=0.2, random_state=1)
+feature_list= [
+            "f1_synset_and_context_after",
+            "f2_synset_and_context_before",
+            "f3_synset_and_target_similarity",
+            "f4_target_and_synset_definition",
+            "f5_synset_and_sentence_similarity",
+            "f6_target_word_and_sentence_similarity",
+            "f7_synset_example_and_sentence_similarity",
+            "f8_synset_definition_and_sentence_similarity",
+            #"f0_lesk_pred_and_target_similarity",  # not useful
+        ]
 y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
-x_train, x_test = (
-    data_train[
-        [
-            "f1_synset_and_target_similarity",
-            "f2_synset_and_sentence_similarity",
-            "f3_synset_and_context_before",
-            "f4_synset_and_context_after",
-            "f5_synset_definition_and_sentence_similarity",
-            "f6_synset_example_and_sentence_similarity",
-            "f7_target_word_and_sentence_similarity",
-            "f8_target_and_synset_definition",
-            #"f0_lesk_pred_and_target_similarity",  # not useful
-        ]
-    ],
-    data_test[
-        [
-            "f1_synset_and_target_similarity",
-            "f2_synset_and_sentence_similarity",
-            "f3_synset_and_context_before",
-            "f4_synset_and_context_after",
-            "f5_synset_definition_and_sentence_similarity",
-            "f6_synset_example_and_sentence_similarity",
-            "f7_target_word_and_sentence_similarity",
-            "f8_target_and_synset_definition",
-            #"f0_lesk_pred_and_target_similarity",  # not useful
-        ]
-    ],
-)
-
+x_train, x_test = (data_train[feature_list],data_test[feature_list])
 
 def accuracy(model, x_train, y_train, x_test, y_test):
     print("training set:", model.score(x_train, y_train))
@@ -274,7 +257,7 @@ def compare(target, prediction):
     return correct.mean()
 
 model = LogisticRegression(C=100).fit(x_train, y_train)
-print("\n Initial model Coefficients", model.coef_.squeeze())
+print("\nInitial model Coefficients\n", model.coef_.squeeze())
 print("model accuracy:")
 accuracy(model, x_train, y_train, x_test, y_test)
 
@@ -288,5 +271,5 @@ print("accuracy of all-neg baseline",compare(data["synset_is_correct"], data["ba
 print("accuracy of all-ran baseline",compare(data["synset_is_correct"], data["baseline_ran"]))
 
 """**********************************************************
-                PART J: Extra points
+                 PART J: Extra points
 **********************************************************"""
