@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 from nltk.corpus import wordnet as wn
+from nltk.wsd import lesk
 from pprint import pprint
+
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -72,7 +74,6 @@ def part_b(word):
 """
 
 pd.set_option("display.max_columns", 10)
-from nltk.wsd import lesk
 
 def load_data(csv_file="semcor30.csv"):
     data = pd.read_csv(csv_file)
