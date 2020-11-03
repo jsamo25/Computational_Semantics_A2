@@ -182,38 +182,45 @@ data["less_common_def_similarity"] = data["target_word"].apply(compare_less_comm
         PART I; Word sense disambiguation
 """
 
-def synset_and_target_definition(word, pred_synset):
-    predicted_synset_def = pred_synset.definition()
-    target_synsets = get_synsets(word)
-    target_def = target_synsets[0].definition()
-    return sentence_cosine_similarity(predicted_synset_def,target_def)
+def synset_and_target_lemmas(pred_synset, word):
+    synset = wn.synset(pred_synset)
+    return cosine(get_word2vec(synset.lemma_names()[0]),get_word2vec(word))
 
-def sentence_and_target_definition(word,sentence):
-    synsets = get_synsets(word)
-    most_common_def = synsets[0].definition()
-    return sentence_cosine_similarity(most_common_def,sentence)
+def sentence_and_target_definition(pred_synset,sentence):
+    synset = wn.synset(pred_synset)
+    return sentence_cosine_similarity(synset.lemma_names()[0],sentence)
+
+def synset_definition_and_sentence(pred_synset, sentence):
+    synset = wn.synset(pred_synset)
+    return sentence_cosine_similarity(synset.definition(),sentence)
+
+def synset_example_and_sentence(pred_synset,sentence):
+    synset = wn.synset(pred_synset)
+    try:
+        return sentence_cosine_similarity(synset.examples()[0],sentence)
+    except:
+        return sentence_cosine_similarity("bias",sentence)
 
 
-data["f1_target_and_synset_definition_similarity"] = data[["target_word","synset"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
-data["f2_target_and_definition_similarity"] = data["target_word"].apply(compare_most_common_definition)
-data["f3_target_and_sentence_similarity"] = data[["target_word","full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
-data["f4_sentence_and_definition_similarity"] = data[["target_word","full_sentence"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
+data["f1_synset_and_target_similarity"] = data[["synset","target_word"]].apply(lambda x: synset_and_target_lemmas(*x), axis=1)
+data["f2_synset_and_sentence_similarity"] = data[["synset","full_sentence"]].apply(lambda x: sentence_and_target_definition(*x),axis=1)
+data["f3_synset_definition_and_sentence_similarity"] = data[["synset","full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x),axis=1)
+data["f4_synset_example_and_sentence_similarity"] = data[["synset","full_sentence"]].apply(lambda x: synset_example_and_sentence(*x),axis=1)
 
-#TODO: idea, use word2vec for target word, then for predicted_synset_lemma? for the whole sentence
 data_train, data_test = train_test_split(data, test_size=0.3)
 y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
 x_train, x_test = (
     data_train[
-        ["f1_target_and_synset_definition_similarity",
-         "f2_target_and_definition_similarity",
-         "f3_target_and_sentence_similarity",
-         "f4_sentence_and_definition_similarity"]
+        ["f1_synset_and_target_similarity",
+         "f2_synset_and_sentence_similarity",
+         "f3_synset_definition_and_sentence_similarity",
+         "f4_synset_example_and_sentence_similarity"]
     ],
     data_test[
-        ["f1_target_and_synset_definition_similarity",
-         "f2_target_and_definition_similarity",
-         "f3_target_and_sentence_similarity",
-         "f4_sentence_and_definition_similarity"]
+        ["f1_synset_and_target_similarity",
+         "f2_synset_and_sentence_similarity",
+         "f3_synset_definition_and_sentence_similarity",
+         "f4_synset_example_and_sentence_similarity"]
     ],
 )
 def accuracy(model, x_train, y_train, x_test, y_test):
