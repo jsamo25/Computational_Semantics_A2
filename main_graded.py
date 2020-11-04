@@ -12,10 +12,8 @@ from sklearn.model_selection import train_test_split
 
 from pdb import set_trace
 
-# nltk.download('averaged_perceptron_tagger')
-
 """**********************************************************
-        PART G; Word sense disambiguation: exploration
+        PART G: Word sense disambiguation: exploration
 **********************************************************"""
 
 data = pd.read_csv("semcor30.csv")
@@ -97,7 +95,6 @@ def get_word2vec(word):
     except:
         return word2vec["bias"]
 
-# Cosine similarity functions
 def cosine(vector1, vector2):
     return np.dot(vector1, vector2)/(np.linalg.norm(vector1) * np.linalg.norm(vector2))
 # print(cosine(word2vec["love"],word2vec["hate"]))
@@ -256,7 +253,7 @@ def compare(target, prediction):
     correct = target == prediction
     return correct.mean()
 
-model = LogisticRegression(C=100).fit(x_train, y_train)
+model = LogisticRegression(C=10).fit(x_train, y_train)
 print("\nInitial model Coefficients\n", model.coef_.squeeze())
 print("model accuracy:")
 accuracy(model, x_train, y_train, x_test, y_test)
