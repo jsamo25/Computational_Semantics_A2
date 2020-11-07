@@ -16,25 +16,23 @@ from pdb import set_trace
         PART G: Word sense disambiguation: exploration
 **********************************************************"""
 
-data = pd.read_csv("semcor30.csv")
-pd.set_option("display.max_columns", 15)
+data = pd.read_csv("semcor.csv")#[:100]
+pd.set_option("display.max_columns", 20)
 
 # 2 SemCor dataset statistics
 def get_full_sentence(target_word, context_before, context_after):
     return str(context_before) + " " + str(target_word) + " " + str(context_after)
 
-data["full_sentence"] = data[["target_word", "context_before", "context_after"]].apply(lambda x: get_full_sentence(*x), axis=1)
-data["len_sentence"] = data["full_sentence"].apply(lambda x: len(x))
-# print(data["full_sentence"])
-# print(data.describe())
-
 def get_pos_tag(string):
-    # https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
     tokens = nltk.word_tokenize(string)
     return nltk.pos_tag(tokens)[0][1]
 
+data["full_sentence"] = data[["target_word", "context_before", "context_after"]].apply(lambda x: get_full_sentence(*x), axis=1)
+data["len_sentence"] = data["full_sentence"].apply(lambda x: len(x))
 data["target_word_pos"] = data["target_word"].apply(get_pos_tag)
+# print(data["full_sentence"])
 # print(data["target_word_pos"])
+# print(data.describe())
 
 # 3 baselines: random baseline and a baseline that always assigns the most common (1st) synset on yhe list.
 def baseline_get_random_synset(word):
@@ -42,19 +40,27 @@ def baseline_get_random_synset(word):
     return random.choice(synsets).name()
 
 def baseline_get_first_synset(word):
+    synsets = wn.synsets(word)[::-1]
+    return synsets.pop().name()
+
+def baseline_get_last_synset(word):
     synsets = wn.synsets(word)
     return synsets.pop().name()
 
 data["baseline_random"] = data["target_word"].apply(baseline_get_random_synset)
 data["baseline_first"] = data["target_word"].apply(baseline_get_first_synset)
+data["baseline_last"] = data["target_word"].apply(baseline_get_last_synset)
 
 def compare(target, prediction):
     # used to compare with the baseline prediction, regardless the True/False column.
     correct = target == prediction
     return correct.mean()
-# print(compare(target = data["synset"],prediction = data["baseline_random"]))
-# print(compare(target = data["synset"],prediction = data["baseline_first"]))
 
+print("Baseline random:", compare(target = data["synset"],prediction = data["baseline_random"]))
+print("Baseline first:",compare(target = data["synset"],prediction = data["baseline_first"]))
+print("Baseline last:",compare(target = data["synset"],prediction = data["baseline_last"]))
+
+set_trace()
 # print(data[["target_word","synset","baseline_random","baseline_first","synset_is_correct"]][:5])
 # true_predicted = data.groupby(["target_word", "synset","baseline_random","baseline_first"])["synset_is_correct"].count()
 # print(true_predicted)
@@ -139,9 +145,7 @@ def synonym_similarity(word):
 
 def hypernym_similarity(word):
     hypernyms = get_hypernyms(word)
-    hyp_similarity = [
-        cosine(get_word2vec(hyp), get_word2vec(word)) for hyp in hypernyms
-    ]
+    hyp_similarity = [cosine(get_word2vec(hyp), get_word2vec(word)) for hyp in hypernyms]
     return np.average(hyp_similarity)
 
 def hyponym_similarity(word):
@@ -160,7 +164,7 @@ data["hyponym_similarity"] = data["target_word"].apply(hyponym_similarity)
 def sentence2vec(sentence):
     sentence = str(sentence).lower().split()
     sentence_embeddings = np.array([get_word2vec(word) for word in sentence])
-    return np.average(sentence_embeddings, axis=0)
+    return np.mean(sentence_embeddings, axis=0)
 # print(sentence2vec("i like rain"))
 
 def sentence_cosine_similarity(sentence1, sentence2):
@@ -186,14 +190,21 @@ data["less_common_def_similarity"] = data["target_word"].apply(compare_less_comm
              PART I: Word sense disambiguation
 **********************************************************"""
 
+def count_word_overlap(pred_synset,sentence):
+    synset = wn.synset(pred_synset)
+    return len(set(sentence.split()) & set(synset.definition().split()))
+
+def synset_name_and_sentence_similarity(pred_synset, sentence):
+    synset = wn.synset(pred_synset)
+    return sentence_cosine_similarity(synset.lemma_names()[0], sentence)
 
 def synset_and_target_lemmas(pred_synset, word):
     synset = wn.synset(pred_synset)
     return cosine(get_word2vec(synset.lemma_names()[0]), get_word2vec(word))
 
-def sentence_and_target_definition(pred_synset, sentence):
+def target_word_and_synset_definition(word, pred_synset):
     synset = wn.synset(pred_synset)
-    return sentence_cosine_similarity(synset.lemma_names()[0], sentence)
+    return sentence_cosine_similarity(synset.definition(), word)
 
 def synset_definition_and_sentence(pred_synset, sentence):
     synset = wn.synset(pred_synset)
@@ -206,10 +217,6 @@ def synset_example_and_sentence(pred_synset, sentence):
     except:
         return sentence_cosine_similarity("bias", sentence)
 
-def target_word_and_synset_definition(word, pred_synset):
-    synset = wn.synset(pred_synset)
-    return sentence_cosine_similarity(synset.definition(), word)
-
 def lesk_algorithm(word, context):
     return lesk(context.split(), word)  # .name()
 
@@ -217,21 +224,22 @@ def target_word_and_lesk_similarity(word, context):
     lesk = lesk_algorithm(word, context).lemma_names()[0]
     return sentence_cosine_similarity(lesk, word)
 
+#TODO: Synset frequency: extract synset index from list and use it as feature
 
-data["f1_synset_and_context_after"] = data[["synset", "context_after"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
-data["f2_synset_and_context_before"] = data[["synset", "context_before"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
+data["f0_overlapping_words"] = data[["synset","full_sentence"]].apply(lambda x: count_word_overlap(*x), axis=1)
+data["f1_synset_and_context_after"] = data[["synset", "context_after"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
+data["f2_synset_and_context_before"] = data[["synset", "context_before"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
 data["f3_synset_and_target_similarity"] = data[["synset", "target_word"]].apply(lambda x: synset_and_target_lemmas(*x), axis=1)
 data["f4_target_and_synset_definition"] = data[["target_word", "synset"]].apply(lambda x: target_word_and_synset_definition(*x), axis=1)
-data["f5_synset_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: sentence_and_target_definition(*x), axis=1)
+data["f5_synset_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
 data["f6_target_word_and_sentence_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
 data["f7_synset_example_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_example_and_sentence(*x), axis=1)
 data["f8_synset_definition_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x), axis=1)
-data["f0_lesk_pred_and_target_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
+#data["f9_lesk_pred_and_target_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
 
-# TODO use synset lemma and find how many times it appears on the full sentence
-
-data_train, data_test = train_test_split(data, test_size=0.2, random_state=1)
+data_train, data_test = train_test_split(data, test_size=0.20, random_state=1)
 feature_list= [
+            "f0_overlapping_words",
             "f1_synset_and_context_after",
             "f2_synset_and_context_before",
             "f3_synset_and_target_similarity",
@@ -240,7 +248,7 @@ feature_list= [
             "f6_target_word_and_sentence_similarity",
             "f7_synset_example_and_sentence_similarity",
             "f8_synset_definition_and_sentence_similarity",
-            #"f0_lesk_pred_and_target_similarity",  # not useful
+            #"f9_lesk_pred_and_target_similarity",  # not useful
         ]
 y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
 x_train, x_test = (data_train[feature_list],data_test[feature_list])
@@ -253,7 +261,7 @@ def compare(target, prediction):
     correct = target == prediction
     return correct.mean()
 
-model = LogisticRegression(C=10).fit(x_train, y_train)
+model = LogisticRegression(C=10,class_weight='balanced').fit(x_train, y_train)
 print("\nInitial model Coefficients\n", model.coef_.squeeze())
 print("model accuracy:")
 accuracy(model, x_train, y_train, x_test, y_test)
@@ -270,3 +278,7 @@ print("accuracy of all-ran baseline",compare(data["synset_is_correct"], data["ba
 """**********************************************************
                  PART J: Extra points
 **********************************************************"""
+
+#print(data.describe())
+
+
