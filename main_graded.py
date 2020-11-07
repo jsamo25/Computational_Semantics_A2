@@ -16,7 +16,7 @@ from pdb import set_trace
         PART G: Word sense disambiguation: exploration
 **********************************************************"""
 
-data = pd.read_csv("semcor.csv")[:10000]
+data = pd.read_csv("semcor.csv")#[:1000]
 pd.set_option("display.max_columns", 20)
 
 # 2 SemCor dataset statistics
@@ -265,7 +265,7 @@ def accuracy(model, x_train, y_train, x_test, y_test):
     print("testing set:", model.score(x_test, y_test))
 
 model = LogisticRegression(C=0.1).fit(x_train, y_train)
-print("\nInitial model Coefficients\n", model.coef_.squeeze())
+print("\nModel Coefficients\n", model.coef_.squeeze())
 print("model accuracy:")
 accuracy(model, x_train, y_train, x_test, y_test)
 
