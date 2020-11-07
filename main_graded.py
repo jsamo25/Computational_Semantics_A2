@@ -16,7 +16,7 @@ from pdb import set_trace
         PART G: Word sense disambiguation: exploration
 **********************************************************"""
 
-data = pd.read_csv("semcor.csv")#[:1000]
+data = pd.read_csv("semcor.csv")[:10000]
 pd.set_option("display.max_columns", 20)
 
 # 2 SemCor dataset statistics
@@ -62,11 +62,12 @@ def compare(target, prediction):
 # print("Baseline random:", compare(target = data["synset"],prediction = data["baseline_random"]))
 # print("Baseline first:",compare(target = data["synset"],prediction = data["baseline_first"]))
 # print("Baseline last:",compare(target = data["synset"],prediction = data["baseline_last"]))
-print("\nComparing with data set where synset is True")
-data_true = data.loc[data["synset_is_correct"] == True]
-print("Baseline random:", compare(target = data_true["synset"],prediction = data_true["baseline_random"]))
-print("Baseline first:",compare(target = data_true["synset"],prediction = data_true["baseline_first"]))
-print("Baseline last:",compare(target = data_true["synset"],prediction = data_true["baseline_last"]))
+
+# data_true = data.loc[data["synset_is_correct"] == True]
+# print("\nComparing with data set where synset is True")
+# print("Baseline random:", compare(target = data_true["synset"],prediction = data_true["baseline_random"]))
+# print("Baseline first:",compare(target = data_true["synset"],prediction = data_true["baseline_first"]))
+# print("Baseline last:",compare(target = data_true["synset"],prediction = data_true["baseline_last"]))
 
 # print(data[["target_word","synset","baseline_random","baseline_first","synset_is_correct"]][:5])
 # true_predicted = data.groupby(["target_word", "synset","baseline_random","baseline_first"])["synset_is_correct"].count()
@@ -126,9 +127,7 @@ def get_hypernyms(word):
         set(
             chain.from_iterable(
                 [hyp.lemma_names() for hyp in chain.from_iterable(hypernyms)]
-            )
-        )
-    )
+            )))
 # print(get_hypernyms("apples"))
 
 def get_hyponyms(word):
@@ -138,9 +137,7 @@ def get_hyponyms(word):
         set(
             chain.from_iterable(
                 [hyp.lemma_names() for hyp in chain.from_iterable(hyponyms)]
-            )
-        )
-    )
+            )))
 # print(get_hyponyms("dog"))
 
 def synonym_similarity(word):
@@ -180,20 +177,25 @@ def compare_most_common_definition(word):
     most_common_def = synsets[0].definition()
     return sentence_cosine_similarity(word, most_common_def)
 
-def compare_less_common_definition(word):
+def compare_least_common_definition(word):
     synsets = get_synsets(word)
     less_common_def = synsets[-1].definition()
     return sentence_cosine_similarity(word, less_common_def)
 
 data["most_common_def_similarity"] = data["target_word"].apply(compare_most_common_definition)
-data["less_common_def_similarity"] = data["target_word"].apply(compare_less_common_definition)
-print("Word compared to it's most common def.",data["most_common_def_similarity"].mean())
-print("Word compared to it's less common def.",data["less_common_def_similarity"].mean())
-set_trace()
+data["less_common_def_similarity"] = data["target_word"].apply(compare_least_common_definition)
+# print("Word compared to its most common def.",data["most_common_def_similarity"].mean())
+# print("Word compared to its least common def.",data["less_common_def_similarity"].mean())
+
 
 """**********************************************************
              PART I: Word sense disambiguation
 **********************************************************"""
+
+def get_synset_usage_frequency_index(word,pred_synset):
+    synsets = get_synsets(word)
+    target_syn = wn.synset(pred_synset)
+    return synsets.index(target_syn)
 
 def count_word_overlap(pred_synset,sentence):
     synset = wn.synset(pred_synset)
@@ -229,11 +231,6 @@ def target_word_and_lesk_similarity(word, context):
     lesk = lesk_algorithm(word, context).lemma_names()[0]
     return sentence_cosine_similarity(lesk, word)
 
-def get_synset_usage_frequency_index(word,pred_synset):
-    synsets = get_synsets(word)
-    target_syn = wn.synset(pred_synset)
-    return synsets.index(target_syn)
-
 data["f0_synset_frequency"] = data[["target_word","synset"]].apply(lambda x: get_synset_usage_frequency_index(*x),axis=1)
 data["f1_overlapping_words"] = data[["synset","full_sentence"]].apply(lambda x: count_word_overlap(*x), axis=1)
 data["f2_synset_and_context_after"] = data[["synset", "context_after"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
@@ -258,7 +255,7 @@ feature_list= [
             "f7_target_word_and_sentence_similarity",
             "f8_synset_example_and_sentence_similarity",
             "f9_synset_definition_and_sentence_similarity",
-            #"f9_lesk_pred_and_target_similarity",  # not useful
+            #"f9_lesk_pred_and_target_similarity",  # not useful as it is now
         ]
 y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
 x_train, x_test = (data_train[feature_list],data_test[feature_list])
@@ -267,11 +264,7 @@ def accuracy(model, x_train, y_train, x_test, y_test):
     print("training set:", model.score(x_train, y_train))
     print("testing set:", model.score(x_test, y_test))
 
-def compare(target, prediction):
-    correct = target == prediction
-    return correct.mean()
-
-model = LogisticRegression(C=10,class_weight='balanced').fit(x_train, y_train)
+model = LogisticRegression(C=0.1).fit(x_train, y_train)
 print("\nInitial model Coefficients\n", model.coef_.squeeze())
 print("model accuracy:")
 accuracy(model, x_train, y_train, x_test, y_test)
