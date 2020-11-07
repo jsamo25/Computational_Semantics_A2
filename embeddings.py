@@ -5,9 +5,9 @@ from collections import Counter
 from pprint import pprint
 from pdb import set_trace
 
-"""
+"""*****************************************
         PART D; Word vectors
-"""
+*****************************************"""
 
 try:
     path_to_word2vec_sample = nltk.data.find('models/word2vec_sample/pruned.word2vec.txt')

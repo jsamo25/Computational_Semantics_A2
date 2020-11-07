@@ -16,7 +16,7 @@ from pdb import set_trace
         PART G: Word sense disambiguation: exploration
 **********************************************************"""
 
-data = pd.read_csv("semcor.csv")[:100]
+data = pd.read_csv("semcor.csv")#[:1000]
 pd.set_option("display.max_columns", 20)
 
 # 2 SemCor dataset statistics
@@ -58,17 +58,15 @@ def compare(target, prediction):
     correct = target == prediction
     return correct.mean()
 
-print("\nComparing with full data set")
-print("Baseline random:", compare(target = data["synset"],prediction = data["baseline_random"]))
-print("Baseline first:",compare(target = data["synset"],prediction = data["baseline_first"]))
-print("Baseline last:",compare(target = data["synset"],prediction = data["baseline_last"]))
-
+# print("\nComparing with full data set")
+# print("Baseline random:", compare(target = data["synset"],prediction = data["baseline_random"]))
+# print("Baseline first:",compare(target = data["synset"],prediction = data["baseline_first"]))
+# print("Baseline last:",compare(target = data["synset"],prediction = data["baseline_last"]))
 print("\nComparing with data set where synset is True")
 data_true = data.loc[data["synset_is_correct"] == True]
 print("Baseline random:", compare(target = data_true["synset"],prediction = data_true["baseline_random"]))
 print("Baseline first:",compare(target = data_true["synset"],prediction = data_true["baseline_first"]))
 print("Baseline last:",compare(target = data_true["synset"],prediction = data_true["baseline_last"]))
-
 
 # print(data[["target_word","synset","baseline_random","baseline_first","synset_is_correct"]][:5])
 # true_predicted = data.groupby(["target_word", "synset","baseline_random","baseline_first"])["synset_is_correct"].count()
@@ -109,6 +107,8 @@ def get_word2vec(word):
         return word2vec[str(word)]
     except:
         return word2vec["bias"]
+# get_word2vec("apple")
+# get_word2vec("sport_utility")#will return the value of the "bias" word
 
 def cosine(vector1, vector2):
     return np.dot(vector1, vector2)/(np.linalg.norm(vector1) * np.linalg.norm(vector2))
@@ -161,7 +161,6 @@ def hyponym_similarity(word):
 data["synonym_similarity"] = data["target_word"].apply(synonym_similarity)
 data["hypernym_similarity"] = data["target_word"].apply(hypernym_similarity)
 data["hyponym_similarity"] = data["target_word"].apply(hyponym_similarity)
-
 # print("synonym_similarity:",data["synonym_similarity"].mean())
 # print("hypernym_similarity:",data["hypernym_similarity"].mean())
 # print("hyponym_similarity:",data["hyponym_similarity"].mean())
@@ -170,7 +169,7 @@ def sentence2vec(sentence):
     sentence = str(sentence).lower().split()
     sentence_embeddings = np.array([get_word2vec(word) for word in sentence])
     return np.mean(sentence_embeddings, axis=0)
-# print(sentence2vec("i like rain"))
+# print(sentence2vec("i love to sleep"))
 
 def sentence_cosine_similarity(sentence1, sentence2):
     return cosine(sentence2vec(sentence1), sentence2vec(sentence2))
@@ -188,8 +187,9 @@ def compare_less_common_definition(word):
 
 data["most_common_def_similarity"] = data["target_word"].apply(compare_most_common_definition)
 data["less_common_def_similarity"] = data["target_word"].apply(compare_less_common_definition)
-# print("Word compared to it's most common def.",data["most_common_def_similarity"].mean())
-# print("Word compared to it's less common def.",data["less_common_def_similarity"].mean())
+print("Word compared to it's most common def.",data["most_common_def_similarity"].mean())
+print("Word compared to it's less common def.",data["less_common_def_similarity"].mean())
+set_trace()
 
 """**********************************************************
              PART I: Word sense disambiguation
