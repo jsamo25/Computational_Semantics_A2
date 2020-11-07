@@ -16,7 +16,7 @@ from pdb import set_trace
         PART G: Word sense disambiguation: exploration
 **********************************************************"""
 
-data = pd.read_csv("semcor.csv")#[:100]
+data = pd.read_csv("semcor.csv")[:100]
 pd.set_option("display.max_columns", 20)
 
 # 2 SemCor dataset statistics
@@ -34,18 +34,20 @@ data["target_word_pos"] = data["target_word"].apply(get_pos_tag)
 # print(data["target_word_pos"])
 # print(data.describe())
 
-# 3 baselines: random baseline and a baseline that always assigns the most common (1st) synset on yhe list.
+# 3 baselines: random baseline and a baseline that always assigns the most common (1st) synset on the list.
+
+def get_synsets(word):
+    return wn.synsets(word)
+# print(get_synsets("apples"))
+
 def baseline_get_random_synset(word):
-    synsets = wn.synsets(word)
-    return random.choice(synsets).name()
+    return random.choice(get_synsets(word)).name()
 
 def baseline_get_first_synset(word):
-    synsets = wn.synsets(word)[::-1]
-    return synsets.pop().name()
+    return get_synsets(word)[1].name()
 
 def baseline_get_last_synset(word):
-    synsets = wn.synsets(word)
-    return synsets.pop().name()
+    return get_synsets(word)[-1].name()
 
 data["baseline_random"] = data["target_word"].apply(baseline_get_random_synset)
 data["baseline_first"] = data["target_word"].apply(baseline_get_first_synset)
@@ -56,11 +58,18 @@ def compare(target, prediction):
     correct = target == prediction
     return correct.mean()
 
+print("\nComparing with full data set")
 print("Baseline random:", compare(target = data["synset"],prediction = data["baseline_random"]))
 print("Baseline first:",compare(target = data["synset"],prediction = data["baseline_first"]))
 print("Baseline last:",compare(target = data["synset"],prediction = data["baseline_last"]))
 
-set_trace()
+print("\nComparing with data set where synset is True")
+data_true = data.loc[data["synset_is_correct"] == True]
+print("Baseline random:", compare(target = data_true["synset"],prediction = data_true["baseline_random"]))
+print("Baseline first:",compare(target = data_true["synset"],prediction = data_true["baseline_first"]))
+print("Baseline last:",compare(target = data_true["synset"],prediction = data_true["baseline_last"]))
+
+
 # print(data[["target_word","synset","baseline_random","baseline_first","synset_is_correct"]][:5])
 # true_predicted = data.groupby(["target_word", "synset","baseline_random","baseline_first"])["synset_is_correct"].count()
 # print(true_predicted)
@@ -104,10 +113,6 @@ def get_word2vec(word):
 def cosine(vector1, vector2):
     return np.dot(vector1, vector2)/(np.linalg.norm(vector1) * np.linalg.norm(vector2))
 # print(cosine(word2vec["love"],word2vec["hate"]))
-
-def get_synsets(word):
-    return wn.synsets(word)
-# print(get_synsets("apples"))
 
 def get_synonyms(word):
     synsets = get_synsets(word)
@@ -224,30 +229,35 @@ def target_word_and_lesk_similarity(word, context):
     lesk = lesk_algorithm(word, context).lemma_names()[0]
     return sentence_cosine_similarity(lesk, word)
 
-#TODO: Synset frequency: extract synset index from list and use it as feature
+def get_synset_usage_frequency_index(word,pred_synset):
+    synsets = get_synsets(word)
+    target_syn = wn.synset(pred_synset)
+    return synsets.index(target_syn)
 
-data["f0_overlapping_words"] = data[["synset","full_sentence"]].apply(lambda x: count_word_overlap(*x), axis=1)
-data["f1_synset_and_context_after"] = data[["synset", "context_after"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
-data["f2_synset_and_context_before"] = data[["synset", "context_before"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
-data["f3_synset_and_target_similarity"] = data[["synset", "target_word"]].apply(lambda x: synset_and_target_lemmas(*x), axis=1)
-data["f4_target_and_synset_definition"] = data[["target_word", "synset"]].apply(lambda x: target_word_and_synset_definition(*x), axis=1)
-data["f5_synset_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
-data["f6_target_word_and_sentence_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
-data["f7_synset_example_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_example_and_sentence(*x), axis=1)
-data["f8_synset_definition_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x), axis=1)
+data["f0_synset_frequency"] = data[["target_word","synset"]].apply(lambda x: get_synset_usage_frequency_index(*x),axis=1)
+data["f1_overlapping_words"] = data[["synset","full_sentence"]].apply(lambda x: count_word_overlap(*x), axis=1)
+data["f2_synset_and_context_after"] = data[["synset", "context_after"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
+data["f3_synset_and_context_before"] = data[["synset", "context_before"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
+data["f4_synset_and_target_similarity"] = data[["synset", "target_word"]].apply(lambda x: synset_and_target_lemmas(*x), axis=1)
+data["f5_target_and_synset_definition"] = data[["target_word", "synset"]].apply(lambda x: target_word_and_synset_definition(*x), axis=1)
+data["f6_synset_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_name_and_sentence_similarity(*x), axis=1)
+data["f7_target_word_and_sentence_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
+data["f8_synset_example_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_example_and_sentence(*x), axis=1)
+data["f9_synset_definition_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x), axis=1)
 #data["f9_lesk_pred_and_target_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
 
 data_train, data_test = train_test_split(data, test_size=0.20, random_state=1)
 feature_list= [
-            "f0_overlapping_words",
-            "f1_synset_and_context_after",
-            "f2_synset_and_context_before",
-            "f3_synset_and_target_similarity",
-            "f4_target_and_synset_definition",
-            "f5_synset_and_sentence_similarity",
-            "f6_target_word_and_sentence_similarity",
-            "f7_synset_example_and_sentence_similarity",
-            "f8_synset_definition_and_sentence_similarity",
+            "f0_synset_frequency",
+            "f1_overlapping_words",
+            "f2_synset_and_context_after",
+            "f3_synset_and_context_before",
+            "f4_synset_and_target_similarity",
+            "f5_target_and_synset_definition",
+            "f6_synset_and_sentence_similarity",
+            "f7_target_word_and_sentence_similarity",
+            "f8_synset_example_and_sentence_similarity",
+            "f9_synset_definition_and_sentence_similarity",
             #"f9_lesk_pred_and_target_similarity",  # not useful
         ]
 y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
