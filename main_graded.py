@@ -2,6 +2,8 @@ import nltk
 import random
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import itertools
 
 from nltk.wsd import lesk
 from itertools import chain
@@ -241,21 +243,21 @@ data["f6_synset_and_sentence_similarity"] = data[["synset", "full_sentence"]].ap
 data["f7_target_word_and_sentence_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
 data["f8_synset_example_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_example_and_sentence(*x), axis=1)
 data["f9_synset_definition_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x), axis=1)
-#data["f9_lesk_pred_and_target_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
+data["f10_lesk_pred_and_target_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
 
-data_train, data_test = train_test_split(data, test_size=0.20, random_state=1)
+data_train, data_test = train_test_split(data, test_size=0.20, random_state=0)
 feature_list= [
             "f0_synset_frequency",
-            "f1_overlapping_words",
+            #"f1_overlapping_words",
             "f2_synset_and_context_after",
             "f3_synset_and_context_before",
-            "f4_synset_and_target_similarity",
-            "f5_target_and_synset_definition",
-            "f6_synset_and_sentence_similarity",
+            #"f4_synset_and_target_similarity",
+            #"f5_target_and_synset_definition",
+            #"f6_synset_and_sentence_similarity",
             "f7_target_word_and_sentence_similarity",
-            "f8_synset_example_and_sentence_similarity",
+            #"f8_synset_example_and_sentence_similarity",
             "f9_synset_definition_and_sentence_similarity",
-            #"f9_lesk_pred_and_target_similarity",  # not useful as it is now
+            #"f10_lesk_pred_and_target_similarity",  # not useful as it is now
         ]
 y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
 x_train, x_test = (data_train[feature_list],data_test[feature_list])
@@ -265,7 +267,7 @@ def accuracy(model, x_train, y_train, x_test, y_test):
     print("testing set:", model.score(x_test, y_test))
 
 model = LogisticRegression(C=0.1).fit(x_train, y_train)
-print("\nModel Coefficients\n", model.coef_.squeeze())
+print("\nLogistic Regression Coefficients\n", model.coef_.squeeze())
 print("model accuracy:")
 accuracy(model, x_train, y_train, x_test, y_test)
 
@@ -277,6 +279,75 @@ print("\n Compare to baselines:")
 print("accuracy of all-pos baseline",compare(data["synset_is_correct"], data["baseline_pos"]))
 print("accuracy of all-neg baseline",compare(data["synset_is_correct"], data["baseline_neg"]))
 print("accuracy of all-ran baseline",compare(data["synset_is_correct"], data["baseline_ran"]))
+
+def plot_confusion_matrix(
+    cm, classes, normalize=False, title="Confusion matrix", cmap=plt.cm.Blues):
+
+    print("\nConfusion matrix", "\nnormalization=", normalize)
+    print(cm)
+
+    plt.imshow(cm, interpolation="nearest", cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes, rotation=45)
+
+    fmt = ".2f" if normalize else "d"
+    thresh = cm.max() / 2.0
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(
+            j, i,
+            format(cm[i, j], fmt),
+            horizontalalignment="center",
+            color="white" if cm[i, j] > thresh else "black",
+        )
+
+    plt.ylabel("Golden label")
+    plt.xlabel("Predicted label")
+    plt.tight_layout()
+
+def print_evaluation(y_test, y_pred, feature_type):
+
+    print("\n Printing evaluation metrics for", feature_type)
+    tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+    print(
+        "\n True Negatives: ", tn,
+        "\n True Positives: ", tp,
+        "\n False Positives: ", fp,
+        "\n False Negatives: ", fn,
+    )
+
+    # Performance metrics when BOW feature is used
+    accuracy = (tn + tp) / (tp + tn + fp + fn)
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    f1_score = (2 * precision * recall) / (precision + recall)
+
+    print(
+        "\n Accuracy: ",
+        round(accuracy, 2) * 100,
+        "\n Precision: ",
+        round(precision, 2) * 100,
+        "\n Recall: ",
+        round(recall, 2) * 100,
+        "\n F1 Score: ",
+        round(f1_score, 2) * 100,
+    )
+
+# Predictions on test data, and confusion matrix computation
+y_pred = model.predict(x_test)
+cnf_matrix = confusion_matrix(y_test, y_pred)
+
+# Plot non-normalized confusion matrix
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=["True", "False"], title="Confusion matrix")
+plt.show()
+
+# evaluation metrics
+print_evaluation(y_test, y_pred,feature_type="Semcor similarities")
+
+#TODO: plot word2vec space TSEN
 
 """**********************************************************
                  PART J: Extra points
