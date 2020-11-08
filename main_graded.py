@@ -20,6 +20,8 @@ from pdb import set_trace
 
 data = pd.read_csv("semcor.csv")#[:1000]
 pd.set_option("display.max_columns", 20)
+pd.set_option('display.width', 1000)
+pd.set_option("max_colwidth", 1000)
 
 # 2 SemCor dataset statistics
 def get_full_sentence(target_word, context_before, context_after):
@@ -340,19 +342,55 @@ y_pred = model.predict(x_test)
 cnf_matrix = confusion_matrix(y_test, y_pred)
 
 # Plot non-normalized confusion matrix
-plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=["True", "False"], title="Confusion matrix")
-plt.show()
+# plt.figure()
+# plot_confusion_matrix(cnf_matrix, classes=["True", "False"], title="Confusion matrix")
+# plt.show()
 
 # evaluation metrics
 print_evaluation(y_test, y_pred,feature_type="Semcor similarities")
 
-#TODO: plot word2vec space TSEN
 
 """**********************************************************
                  PART J: Extra points
 **********************************************************"""
-
 #print(data.describe())
+#8 PEP8 format, reusable functions, list, variables.
+#9 two mini-essays about how NL meaning should be captured sense enumeration vs distributional methods
+#10 2 verbs, 2 nouns, 2 adjectives 5 right 5 wrong
+
+data_test["model_pred"] = y_pred
+
+def data_analysis_wsd(data=data_test,word_type=None):
+    if word_type is "noun":
+        sample = data[data["target_word_pos"].str.contains("NN")]
+    elif word_type is "verb":
+        sample = data[data["target_word_pos"].str.contains("VB")]
+    elif word_type is "adjective":
+        sample = data[data["target_word_pos"].str.contains("JJ")]
+    else:
+        return None
+    good_pred = sample[(sample["model_pred"] == sample["synset_is_correct"])]
+    wrong_pred = sample[(sample["model_pred"] != sample["synset_is_correct"])]
+    return good_pred.sort_values(by=["synset"]), wrong_pred.sort_values(by=["synset"])
 
 
+good_noun, wrong_noun =data_analysis_wsd(data=data_test, word_type="noun")
+# good_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_noun_samples.csv')
+# wrong_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_noun_samples.csv')
+print("\ngood_pred: noun\n",good_noun[["synset","target_word","full_sentence"]][:5])
+print("wrong_pred: noun\n",wrong_noun[["synset","target_word","full_sentence"]][:5])
+
+good_verb, wrong_verb =data_analysis_wsd(data=data_test, word_type="verb")
+# good_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_verb_samples.csv')
+# wrong_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_verb_samples.csv')
+print("\ngood_pred: verb",good_verb[["synset","target_word","full_sentence"]][:5])
+print("wrong_pred: verb",wrong_verb[["synset","target_word","full_sentence"]][:5])
+
+good_adj, wrong_adj =data_analysis_wsd(data=data_test, word_type="adjective")
+# good_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_adj_samples.csv')
+# wrong_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_ajd_samples.csv')
+print("\ngood_pred: adj\n",good_adj[["synset","target_word","full_sentence"]][:5])
+print("wrong_pred: adj\n",wrong_adj[["synset","target_word","full_sentence"]][:5])
+
+#11
+#TODO: plot word2vec space TSEN
