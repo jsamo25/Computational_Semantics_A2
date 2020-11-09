@@ -11,7 +11,7 @@ pd.set_option("display.max_columns", 10)
 pd.set_option('display.width', 100)
 pd.set_option("max_colwidth", 100)
 
-data = pd.read_csv("semcor.csv")[:1000]
+data = pd.read_csv("semcor.csv")#[:5000]
 STOP_WORDS = nltk.corpus.stopwords.words()
 
 def get_full_sentence(target_word, context_before, context_after):
@@ -36,7 +36,7 @@ data["full_sentence"] = data["full_sentence"].apply(clean_sentence)
 corpus = [sentence.split() for sentence in data["full_sentence"]]
 
 #train the model
-model = Word2Vec(corpus, min_count=50)
+model = Word2Vec(corpus, min_count=200)
 print(model)
 # print(list(model.wv.vocab))
 # print(model["Friday"])
@@ -53,3 +53,9 @@ for i, word in enumerate(words):
     pyplot.annotate(word, xy=(result[i,0], result[i,1]))
 
 pyplot.show()
+
+#print(model.wv.vocab)
+#print(model.wv.most_similar("antenna"))
+target_word="antenna"
+print("most similar words to: {}".format([key[0] for key in model.wv.most_similar(str(target_word))]))
+set_trace()
