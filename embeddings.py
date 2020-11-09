@@ -65,8 +65,9 @@ def get_n_similar_words(target,n):
     k = Counter(get_cosine_pairs(target))
     most_common = k.most_common(n)
     print("{} most (cosine) similar pairs:".format(n))
+    print([key[0][1] for key in most_common])
     pprint(most_common)
-#get_n_similar_words("student", n = 10)
+get_n_similar_words("antenna", n = 10)
 
 def sentence2vec(sentence):
     sentence = sentence.lower().split()
