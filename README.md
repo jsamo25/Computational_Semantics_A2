@@ -9,10 +9,10 @@ Two files are used for the analysis:
 
 ### Non-graded part:
 Solved on: `wordnet.py`, `embbedings.py`
-* the word2vec sample can be downloaded with `nltk.download("word2vec_sample")` which is commented on the code.
+* the word2vec sample can be downloaded with `nltk.download("word2vec_sample")` which is also commented on the code.
 
 
 ### Graded part
 Solved on: `main_graded.py` and `plot_gensim_model.py`
 
-Part of speech tags are referenced in: [penn_treebank_pos][https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html]
+Part of speech tags are referenced in: [penn_treebank_pos](https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html)
