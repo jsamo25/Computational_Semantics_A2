@@ -14,6 +14,6 @@ Solved on: `wordnet.py`, `embbedings.py`
 
 
 ### Graded part
-Solved on: `main_graded.py` and `plot_gensim_model.py`
+Solved on: `main_graded.py` and `gensim_model.py`
 
 Part of speech tags are referenced in: [penn_treebank_pos](https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html)
