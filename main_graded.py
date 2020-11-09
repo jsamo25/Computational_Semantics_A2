@@ -248,7 +248,7 @@ data["f6_synset_and_sentence_similarity"] = data[["synset", "full_sentence"]].ap
 data["f7_target_word_and_sentence_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: sentence_cosine_similarity(*x), axis=1)
 data["f8_synset_example_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_example_and_sentence(*x), axis=1)
 data["f9_synset_definition_and_sentence_similarity"] = data[["synset", "full_sentence"]].apply(lambda x: synset_definition_and_sentence(*x), axis=1)
-data["f10_lesk_pred_and_target_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
+#data["f10_lesk_pred_and_target_similarity"] = data[["target_word", "full_sentence"]].apply(lambda x: target_word_and_lesk_similarity(*x), axis=1)
 
 data_train, data_test = train_test_split(data, test_size=0.20, random_state=0)
 feature_list= [
@@ -262,7 +262,7 @@ feature_list= [
             "f7_target_word_and_sentence_similarity",
             #"f8_synset_example_and_sentence_similarity",
             "f9_synset_definition_and_sentence_similarity",
-            #"f10_lesk_pred_and_target_similarity",  # not useful as it is now
+            #"f10_lesk_pred_and_target_similarity",  # only for test don't include in model.
         ]
 y_train, y_test = data_train["synset_is_correct"], data_test["synset_is_correct"]
 x_train, x_test = (data_train[feature_list],data_test[feature_list])
@@ -353,8 +353,7 @@ print_evaluation(y_test, y_pred,feature_type="Semcor similarities")
                  PART J: Extra points
 **********************************************************"""
 #print(data.describe())
-#8 PEP8 format, reusable functions, list, variables.
-#9 NL meaning should be captured sense enumeration vs distributional methods (on report)
+
 #10 2 verbs, 2 nouns, 2 adjectives 5 right 5 wrong
 
 data_test["model_pred"] = y_pred

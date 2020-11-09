@@ -58,4 +58,3 @@ pyplot.show()
 #print(model.wv.most_similar("antenna"))
 target_word="antenna"
 print("most similar words to: {}".format([key[0] for key in model.wv.most_similar(str(target_word))]))
-set_trace()
