@@ -18,7 +18,7 @@ from pdb import set_trace
         PART G: Word sense disambiguation: exploration
 **********************************************************"""
 
-data = pd.read_csv("semcor.csv")#[:1000]
+data = pd.read_csv("semcor.csv")[:1000]
 pd.set_option("display.max_columns", 20)
 pd.set_option('display.width', 1000)
 pd.set_option("max_colwidth", 1000)
@@ -375,20 +375,20 @@ def data_analysis_wsd(data=data_test,word_type=None):
 
 
 good_noun, wrong_noun =data_analysis_wsd(data=data_test, word_type="noun")
-# good_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_noun_samples.csv')
-# wrong_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_noun_samples.csv')
+# good_noun.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_noun_samples.csv')
+# wrong_noun.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_noun_samples.csv')
 print("\ngood_pred: noun\n",good_noun[["synset","target_word","full_sentence"]][:5])
 print("wrong_pred: noun\n",wrong_noun[["synset","target_word","full_sentence"]][:5])
 
 good_verb, wrong_verb =data_analysis_wsd(data=data_test, word_type="verb")
-# good_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_verb_samples.csv')
-# wrong_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_verb_samples.csv')
+# good_verb.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_verb_samples.csv')
+# wrong_verb.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_verb_samples.csv')
 print("\ngood_pred: verb",good_verb[["synset","target_word","full_sentence"]][:5])
 print("wrong_pred: verb",wrong_verb[["synset","target_word","full_sentence"]][:5])
 
 good_adj, wrong_adj =data_analysis_wsd(data=data_test, word_type="adjective")
-# good_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_adj_samples.csv')
-# wrong_pred.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_ajd_samples.csv')
+# good_adj.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_adj_samples.csv')
+# wrong_adj.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_ajd_samples.csv')
 print("\ngood_pred: adj\n",good_adj[["synset","target_word","full_sentence"]][:5])
 print("wrong_pred: adj\n",wrong_adj[["synset","target_word","full_sentence"]][:5])
 
