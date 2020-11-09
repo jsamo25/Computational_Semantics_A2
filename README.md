@@ -1,5 +1,6 @@
-#Computational Semantics
-##Assignment 2 
+# Computational Semantics
+
+## Assignment 2 
 
 Libraries required to run this code are included in `requirements.txt`
 
