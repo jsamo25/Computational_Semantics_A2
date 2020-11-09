@@ -394,4 +394,4 @@ good_adj, wrong_adj =data_analysis_wsd(data=data_test, word_type="adjective")
 print("\ngood_pred: adj\n",good_adj[["synset","target_word","full_sentence"]][:10])
 print("wrong_pred: adj\n",wrong_adj[["synset","target_word","full_sentence"]][:10])
 
-#11 Check different representation on plot_gensim_model.py
+#11 Check different representation on gensim_model.py
