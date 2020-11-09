@@ -62,16 +62,16 @@ def compare(target, prediction):
     correct = target == prediction
     return correct.mean()
 
-# print("\nComparing with full data set")
-# print("Baseline random:", compare(target = data["synset"],prediction = data["baseline_random"]))
-# print("Baseline first:",compare(target = data["synset"],prediction = data["baseline_first"]))
-# print("Baseline last:",compare(target = data["synset"],prediction = data["baseline_last"]))
+print("\nComparing original synset with baseline-based in all cases")
+print("Baseline random:", compare(target = data["synset"],prediction = data["baseline_random"]))
+print("Baseline first:",compare(target = data["synset"],prediction = data["baseline_first"]))
+print("Baseline last:",compare(target = data["synset"],prediction = data["baseline_last"]))
 
-# data_true = data.loc[data["synset_is_correct"] == True]
-# print("\nComparing with data set where synset is True")
-# print("Baseline random:", compare(target = data_true["synset"],prediction = data_true["baseline_random"]))
-# print("Baseline first:",compare(target = data_true["synset"],prediction = data_true["baseline_first"]))
-# print("Baseline last:",compare(target = data_true["synset"],prediction = data_true["baseline_last"]))
+data_true = data.loc[data["synset_is_correct"] == True]
+print("\nomparing original synset with baseline-based when [synset_is_correct] == True")
+print("Baseline random:", compare(target = data_true["synset"],prediction = data_true["baseline_random"]))
+print("Baseline first:",compare(target = data_true["synset"],prediction = data_true["baseline_first"]))
+print("Baseline last:",compare(target = data_true["synset"],prediction = data_true["baseline_last"]))
 
 # print(data[["target_word","synset","baseline_random","baseline_first","synset_is_correct"]][:5])
 # true_predicted = data.groupby(["target_word", "synset","baseline_random","baseline_first"])["synset_is_correct"].count()
@@ -162,9 +162,11 @@ def hyponym_similarity(word):
 data["synonym_similarity"] = data["target_word"].apply(synonym_similarity)
 data["hypernym_similarity"] = data["target_word"].apply(hypernym_similarity)
 data["hyponym_similarity"] = data["target_word"].apply(hyponym_similarity)
-# print("synonym_similarity:",data["synonym_similarity"].mean())
-# print("hypernym_similarity:",data["hypernym_similarity"].mean())
-# print("hyponym_similarity:",data["hyponym_similarity"].mean())
+
+print("\nAverage similarity of Target_word with its respective Synonyms, Hypernyms, and Hyponyms")
+print("synonym_similarity:",data["synonym_similarity"].mean())
+print("hypernym_similarity:",data["hypernym_similarity"].mean())
+print("hyponym_similarity:",data["hyponym_similarity"].mean())
 
 def sentence2vec(sentence):
     sentence = str(sentence).lower().split()
@@ -188,8 +190,9 @@ def compare_least_common_definition(word):
 
 data["most_common_def_similarity"] = data["target_word"].apply(compare_most_common_definition)
 data["less_common_def_similarity"] = data["target_word"].apply(compare_least_common_definition)
-# print("Word compared to its most common def.",data["most_common_def_similarity"].mean())
-# print("Word compared to its least common def.",data["less_common_def_similarity"].mean())
+
+print("Word compared to its most common def.",data["most_common_def_similarity"].mean())
+print("Word compared to its least common def.",data["less_common_def_similarity"].mean())
 
 
 """**********************************************************
@@ -327,24 +330,20 @@ def print_evaluation(y_test, y_pred, feature_type):
     f1_score = (2 * precision * recall) / (precision + recall)
 
     print(
-        "\n Accuracy: ",
-        round(accuracy, 2) * 100,
-        "\n Precision: ",
-        round(precision, 2) * 100,
-        "\n Recall: ",
-        round(recall, 2) * 100,
-        "\n F1 Score: ",
-        round(f1_score, 2) * 100,
+        "\n Accuracy: ",round(accuracy, 2) * 100,
+        "\n Precision: ",round(precision, 2) * 100,
+        "\n Recall: ",round(recall, 2) * 100,
+        "\n F1 Score: ",round(f1_score, 2) * 100,
     )
 
 # Predictions on test data, and confusion matrix computation
 y_pred = model.predict(x_test)
 cnf_matrix = confusion_matrix(y_test, y_pred)
 
-# Plot non-normalized confusion matrix
-# plt.figure()
-# plot_confusion_matrix(cnf_matrix, classes=["True", "False"], title="Confusion matrix")
-# plt.show()
+#Plot non-normalized confusion matrix
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=["True", "False"], title="Confusion matrix")
+plt.show()
 
 # evaluation metrics
 print_evaluation(y_test, y_pred,feature_type="Semcor similarities")
@@ -355,7 +354,7 @@ print_evaluation(y_test, y_pred,feature_type="Semcor similarities")
 **********************************************************"""
 #print(data.describe())
 #8 PEP8 format, reusable functions, list, variables.
-#9 two mini-essays about how NL meaning should be captured sense enumeration vs distributional methods
+#9 NL meaning should be captured sense enumeration vs distributional methods (on report)
 #10 2 verbs, 2 nouns, 2 adjectives 5 right 5 wrong
 
 data_test["model_pred"] = y_pred
@@ -373,24 +372,26 @@ def data_analysis_wsd(data=data_test,word_type=None):
     wrong_pred = sample[(sample["model_pred"] != sample["synset_is_correct"])]
     return good_pred.sort_values(by=["synset"]), wrong_pred.sort_values(by=["synset"])
 
-
+"""
+samples of good and wrong predictions were exported for better sample selection,
+Use DataFrame.to_csv(r"C:\path\...\ filename.csv") in case of curiosity. 
+"""
 good_noun, wrong_noun =data_analysis_wsd(data=data_test, word_type="noun")
 # good_noun.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_noun_samples.csv')
 # wrong_noun.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_noun_samples.csv')
-print("\ngood_pred: noun\n",good_noun[["synset","target_word","full_sentence"]][:5])
-print("wrong_pred: noun\n",wrong_noun[["synset","target_word","full_sentence"]][:5])
+print("\ngood_pred: noun\n",good_noun[["synset","target_word","full_sentence"]][:10])
+print("wrong_pred: noun\n",wrong_noun[["synset","target_word","full_sentence"]][:10])
 
 good_verb, wrong_verb =data_analysis_wsd(data=data_test, word_type="verb")
 # good_verb.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_verb_samples.csv')
 # wrong_verb.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_verb_samples.csv')
-print("\ngood_pred: verb",good_verb[["synset","target_word","full_sentence"]][:5])
-print("wrong_pred: verb",wrong_verb[["synset","target_word","full_sentence"]][:5])
+print("\ngood_pred: verb",good_verb[["synset","target_word","full_sentence"]][:10])
+print("wrong_pred: verb",wrong_verb[["synset","target_word","full_sentence"]][:10])
 
 good_adj, wrong_adj =data_analysis_wsd(data=data_test, word_type="adjective")
 # good_adj.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_adj_samples.csv')
 # wrong_adj.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_ajd_samples.csv')
-print("\ngood_pred: adj\n",good_adj[["synset","target_word","full_sentence"]][:5])
-print("wrong_pred: adj\n",wrong_adj[["synset","target_word","full_sentence"]][:5])
+print("\ngood_pred: adj\n",good_adj[["synset","target_word","full_sentence"]][:10])
+print("wrong_pred: adj\n",wrong_adj[["synset","target_word","full_sentence"]][:10])
 
-#11
-#TODO: plot word2vec space TSEN
+#11 Check different representation on plot_gensim_model.py
