@@ -18,7 +18,7 @@ from pdb import set_trace
         PART G: Word sense disambiguation: exploration
 **********************************************************"""
 
-data = pd.read_csv("semcor.csv")#[:1000]
+data = pd.read_csv("data/semcor.csv")#[:1000]
 pd.set_option("display.max_columns", 20)
 pd.set_option('display.width', 1000)
 pd.set_option("max_colwidth", 1000)

@@ -75,7 +75,7 @@ def part_b(word):
 
 pd.set_option("display.max_columns", 10)
 
-def load_data(csv_file="semcor30.csv"):
+def load_data(csv_file="data/semcor30.csv"):
     data = pd.read_csv(csv_file)
     return data
 
