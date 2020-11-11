@@ -376,20 +376,20 @@ samples of good and wrong predictions were exported for better sample selection,
 Use DataFrame.to_csv(r"C:\path\...\ filename.csv") in case of curiosity. 
 """
 good_noun, wrong_noun =data_analysis_wsd(data=data_test, word_type="noun")
-# good_noun.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_noun_samples.csv')
-# wrong_noun.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_noun_samples.csv')
+good_noun.to_csv(r'data/Good_noun_samples.csv')
+wrong_noun.to_csv(r'data/Good_noun_samples.csv')
 print("\ngood_pred: noun\n",good_noun[["synset","target_word","full_sentence"]][:10])
 print("wrong_pred: noun\n",wrong_noun[["synset","target_word","full_sentence"]][:10])
 
 good_verb, wrong_verb =data_analysis_wsd(data=data_test, word_type="verb")
-# good_verb.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_verb_samples.csv')
-# wrong_verb.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_verb_samples.csv')
+good_verb.to_csv(r'data/Good_noun_samples.csv')
+wrong_verb.to_csv(r'data/Good_noun_samples.csv')
 print("\ngood_pred: verb",good_verb[["synset","target_word","full_sentence"]][:10])
 print("wrong_pred: verb",wrong_verb[["synset","target_word","full_sentence"]][:10])
 
 good_adj, wrong_adj =data_analysis_wsd(data=data_test, word_type="adjective")
-# good_adj.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Good_adj_samples.csv')
-# wrong_adj.to_csv(r'C:\Python Projects\Computational_Semantics_A2\data_analysis_wsd\Wrong_ajd_samples.csv')
+good_adj.to_csv(r'data/Good_noun_samples.csv')
+wrong_adj.to_csv(r'data/Good_noun_samples.csv')
 print("\ngood_pred: adj\n",good_adj[["synset","target_word","full_sentence"]][:10])
 print("wrong_pred: adj\n",wrong_adj[["synset","target_word","full_sentence"]][:10])
 
