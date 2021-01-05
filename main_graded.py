@@ -132,7 +132,7 @@ def get_hypernyms(word):
             chain.from_iterable(
                 [hyp.lemma_names() for hyp in chain.from_iterable(hypernyms)]
             )))
-# print(get_hypernyms("apples"))
+#print(get_hypernyms("aliens"))
 
 def get_hyponyms(word):
     synsets = get_synsets(word)
